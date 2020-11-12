@@ -1,0 +1,17 @@
+{
+  "name": "snapcast-autoconfig",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "debug": "^4.2.0",
+    "deep-equal": "^2.0.4",
+    "jsonrpc-lite": "^2.2.0",
+    "socket-json-wrapper": "^2.0.3"
+  }
+}
