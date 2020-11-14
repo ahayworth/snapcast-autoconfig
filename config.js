@@ -3,48 +3,48 @@ const config = {
   port: 1705,
   streams: [
     {
-      id: 'Airplay - Master Bedroom',
-      clients: ['Master Bedroom'],
+      id: 'bedroom',
+      clients: ['bedroom'],
       priority: 1,
     },
     {
-      id: 'Airplay - Master Bathroom',
-      clients: ['Master Bathroom'],
+      id: 'bathroom',
+      clients: ['bathroom'],
       priority: 1,
     },
     {
-      id: 'Airplay - Master Suite',
+      id: 'mastersuite',
       clients: [
-        'Master Bedroom',
-        'Master Bathroom',
+        'bedroom',
+        'bathroom',
       ],
       priority: 2,
     },
     {
-      id: 'Airplay - Kitchen',
-      clients: ['Kitchen'],
+      id: 'kitchen',
+      clients: ['kitchen'],
       priority: 1,
     },
     {
-      id: 'Airplay - Living Room Speakers',
-      clients: ['Living Room Speakers'],
+      id: 'livingroom',
+      clients: ['livingroom'],
       priority: 1,
     },
     {
-      id: 'Airplay - Great Room',
+      id: 'greatroom',
       clients: [
-        'Kitchen',
-        'Living Room Speakers'
+        'kitchen',
+        'livingroom'
       ],
       priority: 2,
     },
     {
-      id: 'Airplay - Whole House',
+      id: 'wholehouse',
       clients: [
-        'Master Bedroom',
-        'Master Bathroom',
-        'Kitchen',
-        'Living Room Speakers',
+        'bedroom',
+        'bathroom',
+        'kitchen',
+        'livingroom',
       ],
       priority: 3,
     }
