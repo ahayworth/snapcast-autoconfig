@@ -23,7 +23,8 @@ class Snapcast {
 
     this.conn.on('message', this.handle_response.bind(this));
     this.conn.on('error', function(err) {
-      console.log('Got error: ' + err);
+      console.log('Got error: ');
+      console.log(err);
       process.exit(1);
     });
   }
@@ -45,8 +46,25 @@ class Snapcast {
           checkSync = true;
         }
       } else if (resp.type === 'error') {
-        console.log('Got error: ' + resp.payload.error);
-        process.exit(1);
+        var req = this.request_log[resp.payload.id];
+        if (req !== undefined) {
+          console.log('Got error for request "' + req + '":');
+        } else {
+          console.log('Got error:');
+        }
+        console.log(resp.payload);
+
+        const ignorable = [
+          'Group.SetStream',
+          'Group.SetClients',
+          'Group.SetName',
+        ];
+        if (ignorable.includes(req) && resp.payload.error.data === 'Group not found') {
+          console.log("...but I'm ignoring it for the moment.");
+        } else {
+          console.log("...and I'm not sure what to do. See ya!");
+          process.exit(1);
+        }
       } else if (resp.type === 'notification') {
         if (resp.payload.method === 'Stream.OnUpdate') {
           var st = this.streams.find(s => {
@@ -62,7 +80,10 @@ class Snapcast {
     }
 
     if (checkSync && this.out_of_sync_groups().length > 0) {
-      console.log('Detected out-of-sync groups:');
+      console.log('Detected out-of-sync groups!');
+      console.log('Current groups:');
+      console.log(this.groups);
+      console.log('Going to make these groups a reality:');
       console.log(this.out_of_sync_groups());
       console.log('Re-synchronizing groups!');
       this.update_groups();
@@ -134,6 +155,36 @@ class Snapcast {
       });
     }
 
+    // I really wish snapcast wouldn't default clients into a new
+    // group with a playing stream (any playing stream!) if they're
+    // removed from a previous group. In a way it almost makes sense,
+    // but it trips us up here.
+    //
+    // Get the set of all clients in groups with playing streams:
+    var playing_clients = new_groups.flatMap(g => g.clients);
+    debug(playing_clients)
+    // Get clients who are *not* in a playing group:
+    var paused_clients = this.config.streams
+      .flatMap(s => s.clients).filter(c => !playing_clients.includes(c));
+
+    // Filter out duplicates
+    paused_clients = paused_clients
+      .filter((c, i) => paused_clients.indexOf(c) === i);
+
+    // Find the most-important group for this paused client
+    // and push its config into the new groups
+    for (var pc of paused_clients) {
+      var g = this.config.streams
+        .find(s => s.clients.includes(pc) && s.priority === 1);
+
+      if (g !== undefined) {
+        new_groups.push({
+          stream_id: g.id,
+          clients: g.clients,
+        });
+      }
+    }
+
     return new_groups;
   }
 
@@ -149,11 +200,10 @@ class Snapcast {
   }
 
   update_groups() {
-    var desired_groups = this.out_of_sync_groups().sort();
-    for (var dg of desired_groups) {
+    for (var oosg of this.out_of_sync_groups().sort()) {
       // Find the first group with one of our clients
       var match = this.groups.find(g => {
-        return g.clients.includes(dg.clients[0]);
+        return g.clients.includes(oosg.clients[0]);
       });
 
       // Reconfigure this group to be what we want.
@@ -163,7 +213,7 @@ class Snapcast {
         jsonrpc.request(
           this.next_request_id(),
           'Group.SetStream',
-          { id: match.id, stream_id: dg.stream_id }
+          { id: match.id, stream_id: oosg.stream_id }
         )
       );
 
@@ -172,7 +222,7 @@ class Snapcast {
         jsonrpc.request(
           this.next_request_id(),
           'Group.SetClients',
-          { id: match.id, clients: dg.clients }
+          { id: match.id, clients: oosg.clients }
         )
       );
 
@@ -181,7 +231,7 @@ class Snapcast {
         jsonrpc.request(
           this.next_request_id(),
           'Group.SetName',
-          { id: match.id, name: dg.stream_id }
+          { id: match.id, name: oosg.stream_id }
         )
       )
 
