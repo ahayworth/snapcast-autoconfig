@@ -3,6 +3,11 @@ const config = {
   port: 1705,
   streams: [
     {
+      id: 'office',
+      clients: ['office'],
+      priority: 1,
+    },
+    {
       id: 'bedroom',
       clients: ['bedroom'],
       priority: 1,
@@ -45,6 +50,7 @@ const config = {
         'bathroom',
         'kitchen',
         'livingroom',
+        'office',
       ],
       priority: 3,
     }
