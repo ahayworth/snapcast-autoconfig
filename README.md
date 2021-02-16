@@ -52,4 +52,5 @@ My own personal config file is also provided, and can be used as a reference.
 - **You just put your personal config into git?!** I'm lazy, and the info is not sensitive. It's also an instructive example of how I use it!
 - **There are bugs!!** I'm not surprised - help me fix them! I've really only tested this at my house!
 - **Didn't this used to be written in nodejs?** Yes, but that was a bad move on my part; I know ruby a lot better. I just didn't know much about Ruby event-loop programming at the time and node was an easy quick fix.
+- **lib/snapcast looks like it could do a lot more than what it does...** More of a comment than a question, but you're right: the makings of a full snapcast client are in there.
 - **I need help!**  Please open an issue, and I'll try to help if possible.
