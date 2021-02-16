@@ -2,10 +2,14 @@ require 'logger'
 require 'yaml'
 require_relative './lib/snapcast'
 
+config_file = ARGV.last
+if config_file.nil? || !File.readable?(config_file)
+  raise Snapcast::Error.new("Unable to read config file '#{config_file}'! Usage: ruby autoconfig.rb /path/to/config.yml")
+end
 @config = {
   'loglevel' =>'info',
   'polling_interval' => 2,
-}.merge(YAML::load(File.read('./config.yml')))
+}.merge(YAML::load(File.read(config_file)))
 
 @logger = Logger.new(STDOUT, level: Logger::INFO)
 if @config['loglevel'] != 'info'
