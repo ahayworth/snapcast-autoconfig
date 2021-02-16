@@ -1,0 +1,10 @@
+[Unit]
+Description=snapcast group manager
+After=snapserver.service
+
+[Service]
+ExecStart=/usr/bin/ruby /opt/snapcast-autoconfig/autoconfig.rb
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,52 @@
+---
+loglevel: debug
+# For now, we only support TCP connections. This could always be on localhost!
+server: tcp://192.168.1.29:1705
+# We only explicitly manage the streams and clients referenced in this file - however,
+# that doesn't mean that snapcast-autoconfig won't inadvertently mess up a manual grouping
+# you've made. Snapcast groups are dynamic, fuzzy things. YMMV.
+#
+# For each stream, the clients that should be grouped together when it starts playing are listed.
+# The order of the streams is important - streams higher up take precedence over streams further
+# down when deciding which group should claim clients. For example, consider a scenario where
+# the 'office' and 'wholehouse' streams are playing simultaneously. In that case, the 'office' client
+# would always be grouped with the 'office' stream as configured here, because it has the highest priority
+# in the list. The 'wholehouse' stream wouldn't get the 'office' client; it'd technically be incomplete.
+streams:
+  office:
+    clients:
+      - office
+  bedroom:
+    clients:
+      - bedroom
+  bathroom:
+    clients:
+      - bathroom
+  kitchen:
+    clients:
+      - kitchen
+  livingroom:
+    clients:
+      - livingroom
+  mastersuite:
+    clients:
+      - bedroom
+      - bathroom
+  greatroom:
+    clients:
+      - kitchen
+      - livingroom
+    # Here we've configured the 'kitchen' client to have its volume lowered to 70
+    # when it becomes part of this group. Volumes default to '100' if they are not explicitly
+    # listed; and will always overwrite any manual configuration you've done in the UI.
+    volume:
+      kitchen: 70
+  wholehouse:
+    clients:
+      - bedroom
+      - bathroom
+      - kitchen
+      - livingroom
+      - office
+    volume:
+      kitchen: 70
