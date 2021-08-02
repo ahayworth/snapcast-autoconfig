@@ -29,7 +29,7 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
         @logger.debug("\n" + [
           "-" * 10,
           server.groups.map { |g|
-            "#{g.id} (name: '#{g.name}', stream: '#{g.stream&.id}' / #{g.stream&.status}) #{g.clients.map(&:id).inspect}"
+            "#{g.id} (name: '#{g.name}', stream: '#{g.stream&.id}', muted: '#{g.muted}' / #{g.stream&.status}) #{g.clients.map(&:id).inspect}"
           },
           "-" * 10,
         ].join("\n"))
