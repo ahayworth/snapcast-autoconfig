@@ -36,15 +36,15 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
       end
 
       # For each playing stream, determine if any changes need to be made.
-      # Ignore streams we're not managing (not in the config file).
-      managed_streams = server.streams.select do |stream|
+      # Ignore streams we're not managing (not in the config file) or that aren't playing, for now.
+      playing_streams = server.streams.select do |stream|
         stream.playing? && @config['streams'].has_key?(stream.id)
       end
 
       # Sort the streams so that they're ordered the same way as the config file.
-      managed_streams.sort_by! { |stream| @config['streams'].keys.index(stream.id) }
+      playing_streams.sort_by! { |stream| @config['streams'].keys.index(stream.id) }
 
-      managed_streams.each do |stream|
+      playing_streams.each do |stream|
         # Find the configuration for this stream.
         stream_config = @config['streams'][stream.id]
 
@@ -81,7 +81,8 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
         correct_clients = candidate_group.clients.map(&:id).to_set == desired_client_ids.to_set
         correct_name = candidate_group.name == stream.id
         correct_volume = candidate_group.clients.all? { |c| c.config.volume.percent == volume_config[c.id] }
-        unless correct_stream && correct_clients && correct_name && correct_volume
+        correct_muted = !candidate_group.muted?
+        unless correct_stream && correct_clients && correct_name && correct_volume && correct_muted
           # We need to make changes, so let's log that proposal.
           @logger.info "MISCONFIGURED: #{stream.id}"
           @logger.info <<~EOF
@@ -89,6 +90,7 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
               Name: #{candidate_group.name} -> #{stream.id}
               Stream: #{candidate_group.stream.id} -> #{stream.id}
               Clients: #{candidate_group.clients.map(&:id).sort} -> #{desired_client_ids.sort}
+              Muted: #{candidate_group.muted} -> false
           EOF
           candidate_group.clients.each do |client|
             @logger.info "    #{client.id} volume: #{client.config.volume.percent} -> #{volume_config[client.id]}"
@@ -108,9 +110,32 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
             client.volume = new_volume unless client.config.volume.percent == new_volume
           end
 
+          candidate_group.muted = false unless correct_muted
+
           # Break out of the loop if we've made changes (we have, by this point) so we
           # can start the next round of modifications with correct info.
           break
+        end
+      end
+
+      # For streams that are *not* playing, these groups should all be emptied out.
+      # It's otherwise possible to get into a state where a group is misconfigured with another, highly specific
+      # stream rather than silence. For example, in my home right now if I play to the "kitchen" group, the bedroom actually
+      # starts playing too. That's not correct unless and until the "whole house" style streams are active.
+      server.streams.select do |stream|
+        if !stream.playing? && @config['streams'].has_key?(stream.id)
+          server.groups.select do |group|
+            if group.id == stream.id
+              @logger.info "MISCONFIGURED: #{stream.id}"
+              @logger.info <<~EOF
+                Going to mute group '#{group.id}'!
+              EOF
+
+              # Muting is a little easier than figuring out how to actually empty
+              # out groups for snapcast...
+              group.muted = true
+            end
+          end
         end
       end
 
