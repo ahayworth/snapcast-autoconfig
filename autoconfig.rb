@@ -81,7 +81,7 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
         correct_clients = candidate_group.clients.map(&:id).to_set == desired_client_ids.to_set
         correct_name = candidate_group.name == stream.id
         correct_volume = candidate_group.clients.all? { |c| c.config.volume.percent == volume_config[c.id] }
-        correct_muted = !candidate_group.muted?
+        correct_muted = !candidate_group.muted
         unless correct_stream && correct_clients && correct_name && correct_volume && correct_muted
           # We need to make changes, so let's log that proposal.
           @logger.info "MISCONFIGURED: #{stream.id}"
@@ -125,7 +125,7 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
       server.streams.select do |stream|
         if !stream.playing? && @config['streams'].has_key?(stream.id)
           server.groups.select do |group|
-            if group.stream.id == stream.id
+            if group.stream.id == stream.id && !group.muted
               @logger.info "MISCONFIGURED: #{group.stream.id}"
               @logger.info <<~EOF
                 Going to mute group '#{group.id}' / '#{group.name}' / '#{group.stream.id}'!
