@@ -125,10 +125,10 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
       server.streams.select do |stream|
         if !stream.playing? && @config['streams'].has_key?(stream.id)
           server.groups.select do |group|
-            if group.name == stream.id
-              @logger.info "MISCONFIGURED: #{stream.id}"
+            if group.stream.id == stream.id
+              @logger.info "MISCONFIGURED: #{group.stream.id}"
               @logger.info <<~EOF
-                Going to mute group '#{group.id}' / '#{group.name}'!
+                Going to mute group '#{group.id}' / '#{group.name}' / '#{group.stream.id}'!
               EOF
 
               # Muting is a little easier than figuring out how to actually empty
