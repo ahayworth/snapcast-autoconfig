@@ -118,23 +118,26 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
         end
       end
 
-      # For streams that are *not* playing, these groups should all be emptied out.
-      # It's otherwise possible to get into a state where a group is misconfigured with another, highly specific
-      # stream rather than silence. For example, in my home right now if I play to the "kitchen" group, the bedroom actually
-      # starts playing too. That's not correct unless and until the "whole house" style streams are active.
-      server.streams.select do |stream|
-        if !stream.playing? && @config['streams'].has_key?(stream.id)
-          server.groups.select do |group|
-            if group.stream.id == stream.id && !group.muted
-              @logger.info "MISCONFIGURED: #{group.stream.id}"
-              @logger.info <<~EOF
-                Going to mute group '#{group.id}' / '#{group.name}' / '#{group.stream.id}'!
-              EOF
+      # Mute any incorrectly configured groups.
+      # An incorrectly-configured group is one which, at this point
+      # is pointing towards a managed stream, but that stream's
+      # configuration does not specify the client in question.
+      # We mute because frankly that's just a lot easier given
+      # the weird, idiosyncratic way that snapcast manages groups
+      # and streams and clients.
+      server.groups.each do |group|
+        # Is this a playing, managed groups? If so, check it.
+        if group.stream.playing? && @config['streams'].has_key?(group.stream.id)
+          group_client_list = group.clients.map(&:id).sort
+          config_client_list = @config['streams'][group.stream.id]['clients'].sort
 
-              # Muting is a little easier than figuring out how to actually empty
-              # out groups for snapcast...
-              group.muted = true
-            end
+          if group_client_list != config_client_list
+            @logger.info "MISCONFIGURED: #{group.stream.id}"
+            @logger.info <<~EOF
+              Going to mute group '#{group.id}' / '#{group.name}' / '#{group.stream.id}'!
+            EOF
+
+            group.muted = true
           end
         end
       end
