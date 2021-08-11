@@ -119,20 +119,17 @@ Async(annotation: "autoconfig.rb", logger: @logger) do |task|
       end
 
       # Mute any incorrectly configured groups.
-      # An incorrectly-configured group is one which, at this point
-      # is pointing towards a managed stream, but that stream's
-      # configuration does not specify the client in question.
-      # We mute because frankly that's just a lot easier given
-      # the weird, idiosyncratic way that snapcast manages groups
-      # and streams and clients.
+      # An incorrectly-configured group is one which, at this point is pointing towards a managed stream, but that stream's
+      # configuration does not specify the client in question.  We mute because frankly that's just a lot easier given
+      # the weird, idiosyncratic way that snapcast manages groups and streams and clients.
       server.groups.each do |group|
-        # Is this a playing, managed groups? If so, check it.
-        if group.stream.playing? && @config['streams'].has_key?(group.stream.id)
+        # Is this a playing, unmuted, managed group? If so, check it.
+        if group.stream.playing? && !group.muted && @config['streams'].has_key?(group.stream.id)
           group_client_list = group.clients.map(&:id).sort
           config_client_list = @config['streams'][group.stream.id]['clients'].sort
 
           if group_client_list != config_client_list
-            @logger.info "MISCONFIGURED: #{group.stream.id}"
+            @logger.info "MISCONFIGURED: #{group.id}"
             @logger.info <<~EOF
               Going to mute group '#{group.id}' / '#{group.name}' / '#{group.stream.id}'!
             EOF
