@@ -1,3 +1,5 @@
+⚠️ This is in an unmaintained state, and I'm archiving it - Airplay2 is available via the shairport-sync project, which is a much better solution for me than this project. If you find the code useful though, you are welcome to use it! ⚠️
+
 ## snapcast-autoconfig
 
 snapcast-autoconfig watches pre-defined streams on a [`snapcast`](https://github.com/badaix/snapcast) server. If any of them are playing, it will then ensure that a group with the configured clients is playing that stream (and can optionally manipulate the volume of each client within that group).
